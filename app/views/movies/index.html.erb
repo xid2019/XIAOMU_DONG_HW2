@@ -16,9 +16,9 @@
 <table class="table table-striped col-md-12" id="movies">
   <thead>
     <tr>
-      <th>Movie Title</th>
+      <th>{:class => ("hilite" if params[:sort] == "title")}=link_to "Movie Title", movies_path(sort:'title'), id:"title_header"</th>
       <th>Rating</th>
-      <th>Release Date</th>
+      <th>{:class => ("hilite" if params[:sort] == "release_date")}=link_to "Release Data", movies_path(sort:'release_date'), id:"release_date_header"</th>
       <th>More Info</th>
     </tr>
   </thead>
