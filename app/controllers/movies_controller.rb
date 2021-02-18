@@ -1,13 +1,45 @@
 class MoviesController < ApplicationController
 
+  def movie_params
+    params.require(:movie).permit(:title, :rating, :description, :release_date)
+  end
+
   def show
     id = params[:id] # retrieve movie ID from URI route
     @movie = Movie.find(id) # look up movie by unique ID
-    # will render app/views/movies/show.<extension> by default
   end
 
   def index
-    @movies = Movie.all
+    @all_ratings = ['G', 'PG', 'PG-13', 'R']
+    @sort = params[:sort] || session[:sort]
+    @checked_ratings = params[:ratings] || session[:ratings]
+    
+    if !@checked_ratings
+      session[:ratings] = {}
+      @all_ratings.each do |rating|
+        session[:ratings][rating] = 1
+      end
+      @checked_ratings = session[:ratings]
+    end
+    
+    if !(params[:sort] == session[:sort] && params[:ratings] == session[:ratings])
+      params[:sort] = session[:sort] = @sort
+      params[:ratings] = session[:ratings] = @checked_ratings
+      flash.keep
+      redirect_to movies_path(:sort=>params[:sort], :ratings =>params[:ratings])
+    end
+    
+    @boxes = {}
+    @all_ratings.each do |rating|
+      @boxes[rating] = !@checked_ratings.nil? && @checked_ratings.keys.include?(rating)
+    end
+    session[:sort] = @sort
+    session[:ratings] = @checked_ratings
+    
+    @movies = Movie.order @sort
+    if @checked_ratings
+      @movies = Movie.where(:rating => @checked_ratings.keys).order @sort
+    end
   end
 
   def new
@@ -37,11 +69,5 @@ class MoviesController < ApplicationController
     flash[:notice] = "Movie '#{@movie.title}' deleted."
     redirect_to movies_path
   end
-
-  private
-  # Making "internal" methods private is not required, but is a common practice.
-  # This helps make clear which methods respond to requests, and which ones do not.
-  def movie_params
-    params.require(:movie).permit(:title, :rating, :description, :release_date)
-  end
+  
 end
